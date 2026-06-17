@@ -506,10 +506,8 @@ async function readContract(addr, method, args=[]) {
       value:'0x0'
     }]);
     if (!result || result.error) {
-      txLog(`gen_call error: ${JSON.stringify(result?.error||result).slice(0,120)}`,'err');
       return null;
     }
-    txLog(`gen_call OK: ${JSON.stringify(result).slice(0,80)}`,'ok');
     const raw = typeof result==='string'?result
       :result.data||result.output||result.result||result.return_value;
     if (raw && typeof raw==='string' && raw.length>0) {
@@ -538,7 +536,6 @@ async function readContract(addr, method, args=[]) {
     if (raw) return String(raw);
     return JSON.stringify(result);
   } catch(e) {
-    txLog(`gen_call exception: ${e.message.slice(0,120)}`,'err');
     return null;
   }
 }
