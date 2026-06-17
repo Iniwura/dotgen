@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>dotgen - .gen Name Registry</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --green:#10B981;--green-dim:rgba(16,185,129,.1);--green-border:rgba(16,185,129,.2);
+  --red:#EF4444;--blue:#3B82F6;--purple:#8B5CF6;--amber:#F59E0B;
+  --bg:#0A0F0C;--bg2:#111A14;--card:#131F16;--card2:#1A2A1E;
+  --border:#1E3024;--border2:#284035;
+  --text:#E8F5EE;--text2:#7BA98A;--muted:#3D6B4F;
+  --font:'Inter',sans-serif;--mono:'JetBrains Mono',monospace;
+  --r-sm:6px;--r-md:10px;--r-lg:16px;--r-xl:24px;
+  --ease:cubic-bezier(.16,1,.3,1);
+  --shadow:0 2px 8px rgba(0,0,0,.3),0 0 0 1px rgba(16,185,129,.05);
+}
+[data-theme="light"]{
+  --bg:#F0FAF4;--bg2:#E4F5EA;--card:#FFFFFF;--card2:#F5FAF7;
+  --border:#C8E8D4;--border2:#A8D8BC;
+  --text:#0A2414;--text2:#2D6644;--muted:#7AAA8A;
+  --shadow:0 2px 8px rgba(0,0,0,.08),0 0 0 1px rgba(16,185,129,.08);
+}
+html,body{min-height:100%;font-family:var(--font);background:var(--bg);color:var(--text);font-size:14px}
+
+/* Background */
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 700px 500px at 20% 30%,rgba(16,185,129,.06) 0%,transparent 60%),
+    radial-gradient(ellipse 500px 400px at 80% 70%,rgba(59,130,246,.04) 0%,transparent 60%);
+  animation:glow 16s ease-in-out infinite alternate;
+}
+@keyframes glow{0%{transform:translate(0,0)}100%{transform:translate(15px,-10px)}}
+body::after{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background-image:linear-gradient(rgba(16,185,129,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(16,185,129,.03) 1px,transparent 1px);
+  background-size:60px 60px;
+}
+
+/* Header */
+header{
+  position:sticky;top:0;z-index:100;height:56px;
+  display:flex;align-items:center;gap:14px;
+  padding:0 clamp(1rem,4vw,2.5rem);
+  background:rgba(10,15,12,.88);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+}
+[data-theme="light"] header{background:rgba(240,250,244,.92)}
+.hlogo{
+  display:flex;align-items:center;gap:10px;text-decoration:none;
+  font-weight:800;font-size:15px;color:var(--text);letter-spacing:-.02em;
+}
+.hlogo-badge{
+  background:var(--green-dim);border:1px solid var(--green-border);
+  color:var(--green);font-family:var(--mono);font-size:10px;
+  letter-spacing:.08em;padding:2px 8px;border-radius:100px;
+}
+.hright{margin-left:auto;display:flex;align-items:center;gap:10px}
+.wpill{
+  display:none;align-items:center;gap:6px;
+  background:var(--green-dim);border:1px solid var(--green-border);
+  padding:5px 14px;border-radius:100px;
+  font-family:var(--mono);font-size:11px;color:var(--green);
+}
+.wpill.show{display:flex}
+.wpill-dot{width:6px;height:6px;border-radius:50%;background:var(--green)}
+.hbtn{
+  font-family:var(--font);font-weight:600;font-size:12px;
+  padding:8px 16px;border-radius:var(--r-sm);cursor:pointer;
+  transition:all 150ms var(--ease);
+}
+.hbtn-out{background:transparent;border:1.5px solid var(--border2);color:var(--text2)}
+.hbtn-out:hover{border-color:var(--green);color:var(--green)}
+.hbtn-solid{background:var(--green);color:#fff;border:none}
+.hbtn-solid:hover{background:#059669;transform:translateY(-1px);box-shadow:0 4px 16px rgba(16,185,129,.3)}
+.tbtn{background:var(--card);border:1px solid var(--border);color:var(--muted);width:32px;height:32px;border-radius:var(--r-sm);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all 150ms var(--ease)}
+.tbtn:hover{border-color:var(--green);color:var(--green)}
+
+/* Hero - search-centred registrar style */
+.hero{
+  position:relative;z-index:2;text-align:center;
+  padding:clamp(4rem,10vw,6rem) clamp(1rem,4vw,2rem) clamp(2rem,5vw,3rem);
+}
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:6px;
+  font-family:var(--mono);font-size:10px;letter-spacing:.15em;text-transform:uppercase;
+  color:var(--green);border:1px solid var(--green-border);background:var(--green-dim);
+  padding:5px 16px;border-radius:100px;margin-bottom:24px;
+}
+.hero-eyebrow::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 2s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.hero h1{
+  font-size:clamp(2.4rem,7vw,4.2rem);font-weight:800;
+  letter-spacing:-.04em;line-height:1.05;margin-bottom:16px;
+}
+.hero h1 .tld{color:var(--green)}
+.hero p{font-size:15px;color:var(--text2);max-width:420px;margin:0 auto 36px;line-height:1.7}
+
+/* Search box - the hero UI */
+.search-hero{
+  display:flex;max-width:560px;margin:0 auto;
+  background:var(--card);border:2px solid var(--border);border-radius:var(--r-lg);
+  overflow:hidden;transition:border-color 200ms var(--ease);
+  box-shadow:var(--shadow);
+}
+.search-hero:focus-within{border-color:var(--green);box-shadow:0 0 0 4px rgba(16,185,129,.1)}
+.search-input{
+  flex:1;background:transparent;border:none;outline:none;
+  font-family:var(--mono);font-size:15px;color:var(--text);
+  padding:16px 20px;
+}
+.search-input::placeholder{color:var(--muted)}
+.search-tld{
+  display:flex;align-items:center;padding:0 16px;
+  font-family:var(--mono);font-size:15px;color:var(--green);font-weight:700;
+  border-left:1px solid var(--border);
+}
+.search-btn{
+  background:var(--green);color:#fff;border:none;
+  font-family:var(--font);font-weight:700;font-size:13px;
+  padding:0 24px;cursor:pointer;transition:background 150ms;
+  white-space:nowrap;
+}
+.search-btn:hover{background:#059669}
+
+/* Availability result */
+.avail-result{
+  max-width:560px;margin:16px auto 0;
+  padding:14px 20px;border-radius:var(--r-md);
+  font-family:var(--mono);font-size:13px;
+  display:none;
+}
+.avail-result.show{display:flex;align-items:center;gap:10px}
+.avail-result.avail{background:rgba(16,185,129,.07);border:1px solid var(--green-border);color:var(--green)}
+.avail-result.taken{background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.2);color:#F87171}
+.avail-result.invalid{background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2);color:#FCD34D}
+
+/* Stats row */
+.stats-row{
+  position:relative;z-index:2;
+  display:flex;justify-content:center;gap:0;
+  border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+  background:var(--bg2);
+}
+.sstat{padding:16px 40px;text-align:center;border-right:1px solid var(--border)}
+.sstat:last-child{border-right:none}
+.sstat-n{font-size:1.8rem;font-weight:800;color:var(--green);letter-spacing:-.03em}
+.sstat-l{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:2px}
+
+/* Section */
+.section{position:relative;z-index:2;max-width:1100px;margin:0 auto;padding:clamp(2rem,4vw,3rem) clamp(1rem,4vw,2rem)}
+.section-label{
+  font-family:var(--mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);
+  margin-bottom:20px;display:flex;align-items:center;gap:10px;
+}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* Name grid */
+.ngrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+
+/* Name card - digital ID style */
+.nc{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--r-lg);
+  padding:20px;cursor:pointer;
+  transition:all 200ms var(--ease);
+  animation:fin .35s var(--ease) both;
+  position:relative;overflow:hidden;
+}
+@keyframes fin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.nc:hover{border-color:var(--green-border);box-shadow:0 4px 20px rgba(16,185,129,.1),var(--shadow);transform:translateY(-2px)}
+/* Green left border on hover */
+.nc::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--green);opacity:0;border-radius:3px 0 0 3px;transition:opacity 200ms}
+.nc:hover::before{opacity:1}
+
+.nc-top{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.nc-av{
+  width:40px;height:40px;border-radius:10px;
+  background:var(--green-dim);border:1px solid var(--green-border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;flex-shrink:0;
+}
+.nc-name{font-weight:800;font-size:15px;letter-spacing:-.01em}
+.nc-tld{color:var(--green)}
+.nc-addr{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:2px}
+.nc-bio{font-size:12px;color:var(--text2);line-height:1.65;margin-bottom:12px}
+.nc-foot{display:flex;align-items:center;justify-content:space-between}
+.nc-url{
+  font-family:var(--mono);font-size:10px;color:var(--green);
+  text-decoration:none;transition:opacity 150ms;
+}
+.nc-url:hover{opacity:.7}
+.nc-owner{font-family:var(--mono);font-size:9px;color:var(--muted)}
+
+/* Empty */
+.nempty{grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--muted)}
+.nempty-icon{font-size:2.5rem;margin-bottom:14px}
+.nempty-title{font-weight:700;font-size:.9rem;color:var(--text2);margin-bottom:6px}
+
+/* Detail panel */
+.dpanel-bg{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.5);backdrop-filter:blur(4px)}
+.dpanel-bg.show{display:block}
+.dpanel{
+  position:fixed;top:0;right:0;bottom:0;width:min(480px,100vw);
+  background:var(--bg2);border-left:1px solid var(--border);
+  overflow-y:auto;padding:28px;z-index:201;
+  transform:translateX(100%);transition:transform .35s var(--ease);
+}
+.dpanel.show{transform:translateX(0)}
+.dpanel-close{
+  position:absolute;top:18px;right:18px;
+  background:var(--card);border:1px solid var(--border);color:var(--muted);
+  width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:14px;
+  display:flex;align-items:center;justify-content:center;transition:all 120ms;
+}
+.dpanel-close:hover{border-color:var(--red);color:var(--red)}
+
+/* ID card inside panel */
+.id-card{
+  background:linear-gradient(135deg,var(--card2),var(--card));
+  border:1px solid var(--border);border-radius:var(--r-xl);
+  padding:24px;margin-bottom:20px;position:relative;overflow:hidden;
+}
+.id-card::before{content:'';position:absolute;top:-40px;right:-40px;width:120px;height:120px;border-radius:50%;background:rgba(16,185,129,.06)}
+.id-av{width:56px;height:56px;border-radius:14px;background:var(--green-dim);border:1px solid var(--green-border);display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:14px}
+.id-name{font-size:1.4rem;font-weight:800;letter-spacing:-.03em;margin-bottom:4px}
+.id-tld{color:var(--green)}
+.id-addr{font-family:var(--mono);font-size:10px;color:var(--muted);word-break:break-all;margin-bottom:10px}
+.id-bio{font-size:12px;color:var(--text2);line-height:1.7}
+
+/* Modal */
+.mbg{display:none;position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:20px}
+.mbg.show{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-xl);padding:28px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;position:relative;box-shadow:0 24px 80px rgba(0,0,0,.4)}
+.mclose{float:right;background:var(--card);border:1px solid var(--border);color:var(--muted);font-size:18px;width:28px;height:28px;cursor:pointer;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:all 120ms}
+.mclose:hover{border-color:var(--red);color:var(--red)}
+.mtitle{font-weight:800;font-size:1.1rem;letter-spacing:-.02em;margin-bottom:6px}
+.msub{font-size:11px;color:var(--muted);margin-bottom:20px;line-height:1.7}
+.ff{margin-bottom:14px}
+.fl{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px}
+.fi{width:100%;background:var(--card);border:1.5px solid var(--border);color:var(--text);font-family:var(--mono);font-size:12px;padding:10px 14px;border-radius:var(--r-sm);outline:none;transition:border-color 150ms var(--ease)}
+.fi:focus{border-color:var(--green)}
+.fi::placeholder{color:var(--muted)}
+.hint{font-size:10px;color:var(--muted);text-align:center;margin-top:10px}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;font-family:var(--font);font-weight:700;font-size:13px;padding:11px 22px;cursor:pointer;border-radius:var(--r-sm);transition:all 150ms var(--ease)}
+.btn-solid{background:var(--green);color:#fff;border:none}
+.btn-solid:hover{background:#059669;transform:translateY(-1px);box-shadow:0 4px 16px rgba(16,185,129,.3)}
+.btn-outline{background:transparent;border:1.5px solid var(--border2);color:var(--text2)}
+.btn-outline:hover{border-color:var(--green);color:var(--green)}
+.btn-danger{background:transparent;border:1.5px solid rgba(239,68,68,.3);color:#F87171}
+.btn-danger:hover{background:rgba(239,68,68,.07)}
+
+/* Toast */
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--card);border:1px solid var(--border);color:var(--text);padding:10px 22px;border-radius:100px;font-family:var(--mono);font-size:11px;z-index:999;transition:transform .3s var(--ease),opacity .3s;opacity:0;pointer-events:none;box-shadow:0 8px 32px rgba(0,0,0,.3)}
+#toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+#toast.tok{border-color:rgba(16,185,129,.3);color:var(--green)}
+#toast.terr{border-color:rgba(239,68,68,.3);color:#F87171}
+
+.spin{display:inline-block;width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+footer{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:20px clamp(1rem,4vw,2.5rem);border-top:1px solid var(--border);font-family:var(--mono);font-size:10px;color:var(--muted)}
+footer a{color:var(--muted);text-decoration:none}
+footer a:hover{color:var(--green)}
+
+@media(max-width:600px){.ngrid{grid-template-columns:1fr}.dpanel{width:100vw}.search-tld{display:none}}
+</style>
+</head>
+<body>
+
+<canvas id="particle-canvas" style="position:fixed;inset:0;z-index:0;pointer-events:none"></canvas>
+
+<header>
+  <a class="hlogo" href="#">
+    <span style="color:var(--green);font-family:var(--mono);font-weight:700;font-size:18px">⬡</span>
+    dotgen
+    <span class="hlogo-badge">.gen</span>
+  </a>
+  <div class="hright">
+    <div class="wpill" id="wpill">
+      <div class="wpill-dot"></div>
+      <span id="wpill-addr"></span>
+    </div>
+    <button class="hbtn hbtn-out" id="hdr-conn" onclick="connectWallet()">Connect Wallet</button>
+    <button class="hbtn hbtn-out" id="hdr-dis" onclick="disconnectWallet()" style="display:none">Disconnect</button>
+    <button class="hbtn hbtn-solid" id="btn-reg" style="display:none" onclick="openRegister()">Register Name</button>
+    <button class="tbtn" onclick="toggleTheme()">☀</button>
+  </div>
+</header>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eyebrow">dotgen Name Registry · Bradbury Testnet</div>
+  <h1>Your identity on<br><span class="tld">.gen</span></h1>
+  <p>Register a human-readable name on GenLayer. AI validates every registration - no impersonation, no spam.</p>
+  <div class="search-hero">
+    <input class="search-input" id="name-input" placeholder="yourname" maxlength="32" onkeydown="if(event.key==='Enter')checkAvailability()">
+    <div class="search-tld">.gen</div>
+    <button class="search-btn" onclick="checkAvailability()">Check →</button>
+  </div>
+  <div class="avail-result" id="avail-result"></div>
+</div>
+
+<!-- STATS -->
+<div class="stats-row">
+  <div class="sstat"><div class="sstat-n" id="s-total">-</div><div class="sstat-l">Registered</div></div>
+  <div class="sstat"><div class="sstat-n" id="s-tld" style="color:var(--text)">.gen</div><div class="sstat-l">Domain</div></div>
+  <div class="sstat"><div class="sstat-n" id="s-ai" style="color:var(--text2)">AI</div><div class="sstat-l">Validated</div></div>
+</div>
+
+<!-- DIRECTORY -->
+<div class="section">
+  <div class="section-label">Registered Names</div>
+  <div class="ngrid" id="ngrid">
+    <div class="nempty"><div class="nempty-icon"><span class="spin"></span></div><div class="nempty-title" style="margin-top:10px">Loading…</div></div>
+  </div>
+</div>
+
+<!-- DETAIL PANEL -->
+<div class="dpanel-bg" id="dpanel-bg" onclick="closeDetail()"></div>
+<div class="dpanel" id="dpanel">
+  <button class="dpanel-close" onclick="closeDetail()">×</button>
+  <div id="dpanel-content"></div>
+</div>
+
+<!-- REGISTER MODAL -->
+<div class="mbg" id="m-reg">
+<div class="modal">
+  <button class="mclose" onclick="closeModal('m-reg')">×</button>
+  <div class="mtitle">Register a <span style="color:var(--green)">.gen</span> name</div>
+  <div class="msub">AI validates your name before it's stored on-chain. Impersonation and inappropriate names are automatically blocked.</div>
+  <div class="ff">
+    <label class="fl">Name <span style="color:var(--muted)">(3-32 chars, letters/numbers/hyphens)</span></label>
+    <div style="display:flex;align-items:center;gap:0;background:var(--card);border:1.5px solid var(--border);border-radius:var(--r-sm);overflow:hidden;transition:border-color 150ms">
+      <input class="fi" id="reg-name" placeholder="yourname" maxlength="32" style="border:none;border-radius:0;flex:1">
+      <span style="padding:0 14px;font-family:var(--mono);font-size:13px;color:var(--green);font-weight:700;border-left:1px solid var(--border)">.gen</span>
+    </div>
+  </div>
+  <div class="ff"><label class="fl">Points to address <span style="color:var(--muted)">(leave blank for your wallet)</span></label><input class="fi" id="reg-addr" placeholder="0x… or leave blank"></div>
+  <div class="ff"><label class="fl">Website URL</label><input class="fi" id="reg-url" placeholder="https://…"></div>
+  <div class="ff"><label class="fl">Avatar emoji</label><input class="fi" id="reg-avatar" placeholder="🧑‍💻" maxlength="4"></div>
+  <div class="ff"><label class="fl">Bio <span style="color:var(--muted)">(max 200 chars)</span></label><input class="fi" id="reg-bio" placeholder="Building on GenLayer…" maxlength="200"></div>
+  <button class="btn btn-solid" id="btn-reg-sub" style="width:100%" onclick="registerName()">Register - AI will validate</button>
+  <p class="hint">1 transaction · AI validation takes 1-3 min on Bradbury</p>
+</div>
+</div>
+
+<!-- UPDATE MODAL -->
+<div class="mbg" id="m-update">
+<div class="modal">
+  <button class="mclose" onclick="closeModal('m-update')">×</button>
+  <div class="mtitle">Update <span class="update-name" style="color:var(--green)"></span></div>
+  <div class="msub">Update the profile data for your .gen name.</div>
+  <input type="hidden" id="update-name-val">
+  <div class="ff"><label class="fl">Website URL</label><input class="fi" id="upd-url" placeholder="https://…"></div>
+  <div class="ff"><label class="fl">Avatar emoji</label><input class="fi" id="upd-avatar" placeholder="🧑‍💻" maxlength="4"></div>
+  <div class="ff"><label class="fl">Bio</label><input class="fi" id="upd-bio" placeholder="Building on GenLayer…" maxlength="200"></div>
+  <button class="btn btn-solid" id="btn-upd-sub" style="width:100%;margin-bottom:10px" onclick="updateRecord()">Save Changes</button>
+  <button class="btn btn-danger" style="width:100%" onclick="releaseConfirm()">Release Name</button>
+</div>
+</div>
+
+<div id="toast"></div>
+
+<footer>
+  <div style="display:flex;align-items:center;gap:8px">
+    <span style="color:var(--green);font-family:var(--mono);font-weight:700">⬡</span>
+    dotgen Name Registry · Bradbury Testnet · Chain ID 4221
+  </div>
+  <div>
+    <a href="https://studio.genlayer.com" target="_blank">Studio</a> ·
+    <a href="https://docs.genlayer.com" target="_blank">Docs</a>
+  </div>
+</footer>
+
+<script>
+const _T = { SPECIAL:0, PINT:1, NINT:2, BYTES:3, STR:4, ARR:5, MAP:6 };
+const _S = { NULL:0, FALSE:8, TRUE:16, ADDR:24 }; // (val << 3) | SPECIAL
+
+function _writeNum(to, data) {
+  if (data === 0n) { to.push(0); return; }
+  while (data > 0n) {
+    let cur = Number(data & 0x7fn);
+    data >>= 7n;
+    if (data > 0n) cur |= 128;
+    to.push(cur);
+  }
+}
+
+function _encodeWithType(to, val, typ) {
+  _writeNum(to, (BigInt(val) << 3n) | BigInt(typ));
+}
+
+function _encodeImpl(to, data) {
+  if (data === null || data === undefined) { to.push(_S.NULL); return; }
+  if (data === true)  { to.push(_S.TRUE);  return; }
+  if (data === false) { to.push(_S.FALSE); return; }
+  if (typeof data === 'number' || typeof data === 'bigint') {
+    const n = BigInt(data);
+    if (n >= 0n) _encodeWithType(to, n, _T.PINT);
+    else         _encodeWithType(to, -n - 1n, _T.NINT);
+    return;
+  }
+  if (typeof data === 'string') {
+    const b = new TextEncoder().encode(data);
+    _encodeWithType(to, b.length, _T.STR);
+    for (const c of b) to.push(c);
+    return;
+  }
+  if (data instanceof Uint8Array) {
+    _encodeWithType(to, data.length, _T.BYTES);
+    for (const c of data) to.push(c);
+    return;
+  }
+  if (Array.isArray(data)) {
+    _encodeWithType(to, data.length, _T.ARR);
+    for (const item of data) _encodeImpl(to, item);
+    return;
+  }
+  if (typeof data === 'object') {
+    // Sort keys alphabetically (matches genlayer-js compareString)
+    const entries = Object.entries(data).sort(([a],[b]) => a < b ? -1 : a > b ? 1 : 0);
+    _encodeWithType(to, entries.length, _T.MAP);
+    for (const [k, v] of entries) {
+      // Map keys: raw length + bytes (NO type tag) - per genlayer-js encodeMap source
+      const kb = new TextEncoder().encode(k);
+      _writeNum(to, BigInt(kb.length));
+      for (const b of kb) to.push(b);
+      // Map values: normal type-tagged encoding
+      _encodeImpl(to, v);
+    }
+    return;
+  }
+}
+
+function _glEncode(data) {
+  const arr = [];
+  _encodeImpl(arr, data);
+  return new Uint8Array(arr);
+}
+
+function _rlpBytes(data) {
+  if (data.length === 1 && data[0] < 0x80) return data;
+  if (data.length <= 55) return new Uint8Array([0x80 + data.length, ...data]);
+  const lb = []; let l = data.length;
+  while (l > 0) { lb.unshift(l & 0xff); l >>= 8; }
+  return new Uint8Array([0xb7 + lb.length, ...lb, ...data]);
+}
+
+function _rlpList(items) {
+  const encoded = []; for (const item of items) for (const b of _rlpBytes(item)) encoded.push(b);
+  if (encoded.length <= 55) return new Uint8Array([0xc0 + encoded.length, ...encoded]);
+  const lb = []; let l = encoded.length;
+  while (l > 0) { lb.unshift(l & 0xff); l >>= 8; }
+  return new Uint8Array([0xf7 + lb.length, ...lb, ...encoded]);
+}
+
+// For gen_call reads - raw GL encoding, no RLP wrapper
+function encodeForRead(method, args) {
+  const obj = {};
+  if (method) obj.method = method;
+  if (args && args.length > 0) obj.args = args;
+  const encoded = _glEncode(obj);
+  return '0x' + Array.from(encoded).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+// For writeContract - RLP([encode(obj), encode(leaderOnly)])
+function encodeCalldataMsgpack(method, args, leaderOnly=false) {
+  const obj = {};
+  if (method) obj.method = method;
+  if (args && args.length > 0) obj.args = args;
+  const encoded    = _glEncode(obj);
+  // leaderOnly is a raw boolean byte (0x00=false, 0x01=true), NOT GL-encoded
+  const leaderByte = new Uint8Array([leaderOnly ? 1 : 0]);
+  const rlp        = _rlpList([encoded, leaderByte]);
+  return '0x' + Array.from(rlp).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+async function rpcPost(method, params) {
+  const r = await fetch(RPC, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({jsonrpc:'2.0', id:Date.now(), method, params})
+  });
+  const d = await r.json();
+  if (d.error) throw new Error(d.error.message || JSON.stringify(d.error));
+  return d.result;
+}
+
+async function readContract(addr, method, args=[]) {
+  const from = S.account || '0x0000000000000000000000000000000000000000';
+  // gen_call needs RLP([encode(obj), encode(leaderOnly)]) with capital Type/Data fields
+  const data = encodeCalldataMsgpack(method, args, false);
+  try {
+    const result = await rpcPost('gen_call', [{
+      to:   addr,
+      from: from,
+      Data: data,
+      Type: 'read',
+      gas:  '0x7A120',
+      value:'0x0'
+    }]);
+    if (!result || result.error) {
+      txLog(`gen_call error: ${JSON.stringify(result?.error||result).slice(0,120)}`,'err');
+      return null;
+    }
+    txLog(`gen_call OK: ${JSON.stringify(result).slice(0,80)}`,'ok');
+    const raw = typeof result==='string'?result
+      :result.data||result.output||result.result||result.return_value;
+    if (raw && typeof raw==='string' && raw.length>0) {
+      // raw is hex string (may or may not have 0x prefix)
+      const hex = raw.startsWith('0x') ? raw.slice(2) : raw;
+      try {
+        const bytes = new Uint8Array(hex.match(/.{1,2}/g).map(b=>parseInt(b,16)));
+        // Decode GL-encoded string: skip type header bytes (varint), read string content
+        let pos = 0;
+        let varint = 0, shift = 0;
+        while (pos < bytes.length) {
+          const b = bytes[pos++];
+          varint |= (b & 0x7f) << shift;
+          shift += 7;
+          if (!(b & 0x80)) break;
+        }
+        const typ = varint & 7;  // 4 = TYPE_STR
+        const len = varint >> 3;
+        if (typ === 4 && pos + len <= bytes.length) {
+          return new TextDecoder().decode(bytes.slice(pos, pos + len));
+        }
+        // Fallback: try raw UTF-8 decode
+        return new TextDecoder().decode(bytes);
+      } catch {}
+    }
+    if (raw) return String(raw);
+    return JSON.stringify(result);
+  } catch(e) {
+    txLog(`gen_call exception: ${e.message.slice(0,120)}`,'err');
+    return null;
+  }
+}
+
+// ── Config ───────────────────────────────────────────────────
+const CONTRACT_ADDR = '0xD7123F37FE4FCBAF4Be37fBdEEB6f8AaC22042B3';
+const RPC = 'https://rpc-bradbury.genlayer.com';
+const CHAIN_ID = '0x107D';
+const NET = {chainId:CHAIN_ID,chainName:'GenLayer Bradbury',rpcUrls:[RPC],nativeCurrency:{name:'GEN',symbol:'GEN',decimals:18},blockExplorerUrls:['https://explorer-bradbury.genlayer.com']};
+
+// ── State & helpers ──────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const sh = a => a&&a.length>10 ? a.slice(0,6)+'…'+a.slice(-4) : a;
+let NAMES = [], S = {account:'',connected:false};
+
+async function writeContract(method,args=[]){
+  const cd = encodeCalldataMsgpack(method,args,false);
+  const CONS='0x4F33a39DC5Ac7c5B9F2E7aB137F7c50b8f9B9339';
+  const pad=v=>v.toString(16).padStart(64,'0');
+  const padA=a=>a.toLowerCase().replace('0x','').padStart(64,'0');
+  const ch=cd.startsWith('0x')?cd.slice(2):cd;
+  const txData='0xe71d5196'+padA(S.account)+padA(CONTRACT_ADDR)+pad(1)+pad(3)+pad(192)+pad(Math.floor(Date.now()/1000)+3600)+pad(ch.length/2)+ch.padEnd(Math.ceil(ch.length/64)*64,'0');
+  return window.ethereum.request({method:'eth_sendTransaction',params:[{from:S.account,to:CONS,data:txData,gas:'0x493E0'}]});
+}
+
+async function waitTx(hash,tries=30){
+  for(let i=0;i<tries;i++){
+    await new Promise(r=>setTimeout(r,3000));
+    if(i===9) toast('Still finalizing - Bradbury can take 1-3 min. Keep tab open.','ok',10000);
+    try{
+      const r=await rpcPost('eth_getTransactionReceipt',[hash]);
+      if(r){if(r.status==='0x1'||r.status===1)return;throw new Error('Transaction rejected');}
+    }catch(e){if(e.message.startsWith('Trans'))throw e;}
+  }
+  throw new Error('Timeout - check explorer-bradbury.genlayer.com');
+}
+
+// ── Load ─────────────────────────────────────────────────
+async function load(){
+  if(!CONTRACT_ADDR){
+    $('ngrid').innerHTML=`<div class="nempty"><div class="nempty-icon">🚧</div><div class="nempty-title">Contract not deployed yet</div></div>`;
+    $('s-total').textContent='0'; return;
+  }
+  try{
+    const raw = await readContract(CONTRACT_ADDR,'get_all_names',[]);
+    NAMES = (raw==='[]'||!raw) ? [] : JSON.parse(raw);
+    $('s-total').textContent = NAMES.length;
+    render();
+  }catch(e){
+    $('ngrid').innerHTML=`<div class="nempty"><div class="nempty-icon">⚠️</div><div class="nempty-title">${e.message||'Could not load names'}</div></div>`;
+  }
+}
+
+// ── Check availability ───────────────────────────────────
+async function checkAvailability(){
+  const name = $('name-input').value.trim().toLowerCase().replace('.gen','');
+  const res  = $('avail-result');
+  if(!name){ res.className='avail-result'; return; }
+  res.className='avail-result show avail';
+  res.innerHTML='<span class="spin"></span> Checking…';
+  if(!CONTRACT_ADDR){
+    res.className='avail-result show avail';
+    res.innerHTML='⬡ Contract not yet deployed';
+    return;
+  }
+  try{
+    const status = await readContract(CONTRACT_ADDR,'is_available',[name]);
+    if(status==='AVAILABLE'){
+      res.className='avail-result show avail';
+      res.innerHTML=`✓ <strong>${name}.gen</strong> is available! <button onclick="openRegister('${name}')" style="margin-left:auto;background:var(--green);color:#fff;border:none;padding:5px 14px;border-radius:100px;cursor:pointer;font-size:11px;font-weight:700">Register →</button>`;
+    } else if(status==='TAKEN'){
+      const rec = await readContract(CONTRACT_ADDR,'get_record',[name]);
+      res.className='avail-result show taken';
+      res.innerHTML=`✕ <strong>${name}.gen</strong> is already registered`;
+      if(rec&&rec!=='NOT_FOUND') try{const r=JSON.parse(rec);if(r.owner)res.innerHTML+=` by ${sh(r.owner)}`;}catch{}
+    } else {
+      res.className='avail-result show invalid';
+      res.innerHTML=`⚠ Invalid name - use letters, numbers, hyphens only (3-32 chars)`;
+    }
+  }catch(e){
+    res.className='avail-result show invalid';
+    res.innerHTML='Could not check: '+e.message;
+  }
+}
+
+// ── Render ────────────────────────────────────────────────
+function render(){
+  if(!NAMES.length){
+    $('ngrid').innerHTML=`<div class="nempty"><div class="nempty-icon">🔖</div><div class="nempty-title">No names registered yet</div><div style="font-size:11px">Be the first to claim a .gen name above.</div></div>`;
+    return;
+  }
+  $('ngrid').innerHTML = NAMES.map(n => nameCard(n)).join('');
+}
+
+function nameCard(n){
+  const av    = n.avatar||'🧑‍💻';
+  const owned = S.connected && n.owner && n.owner.toLowerCase()===S.account.toLowerCase();
+  return `<div class="nc" onclick="openDetail('${n.name}')">
+    <div class="nc-top">
+      <div class="nc-av">${av}</div>
+      <div>
+        <div class="nc-name">${n.name}<span class="nc-tld">.gen</span></div>
+        <div class="nc-addr">${sh(n.address||n.owner||'')}</div>
+      </div>
+      ${owned?`<span style="margin-left:auto;font-family:var(--mono);font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--green);background:var(--green-dim);border:1px solid var(--green-border);padding:2px 8px;border-radius:100px">yours</span>`:''}
+    </div>
+    ${n.bio?`<div class="nc-bio">${n.bio}</div>`:''}
+    <div class="nc-foot">
+      ${n.url?`<a class="nc-url" href="${n.url}" target="_blank" onclick="event.stopPropagation()">↗ ${n.url.replace(/https?:\/\//,'').slice(0,28)}</a>`:`<span></span>`}
+      <div class="nc-owner">${sh(n.owner||'')}</div>
+    </div>
+  </div>`;
+}
+
+// ── Detail panel ─────────────────────────────────────────
+function openDetail(name){
+  const n = NAMES.find(x=>x.name===name); if(!n) return;
+  const owned = S.connected && n.owner && n.owner.toLowerCase()===S.account.toLowerCase();
+  $('dpanel-content').innerHTML = `
+    <div class="id-card">
+      <div class="id-av">${n.avatar||'🧑‍💻'}</div>
+      <div class="id-name">${n.name}<span class="id-tld">.gen</span></div>
+      <div class="id-addr">${n.address||n.owner||''}</div>
+      ${n.bio?`<div class="id-bio">${n.bio}</div>`:''}
+    </div>
+    ${n.url?`<a href="${n.url}" target="_blank" style="display:flex;align-items:center;gap:8px;padding:12px;background:var(--card);border:1px solid var(--border);border-radius:var(--r-md);text-decoration:none;color:var(--text2);font-family:var(--mono);font-size:11px;margin-bottom:12px;transition:border-color 150ms" onmouseover="this.style.borderColor='var(--green)'" onmouseout="this.style.borderColor='var(--border)'">↗ ${n.url}</a>`:''}
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--r-md);padding:12px;margin-bottom:16px">
+      <div style="font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Owner</div>
+      <div style="font-family:var(--mono);font-size:11px;word-break:break-all;color:var(--text2)">${n.owner||''}</div>
+    </div>
+    ${owned?`<div style="display:flex;gap:8px">
+      <button class="btn btn-outline" style="flex:1" onclick="openUpdate('${n.name}')">Edit Profile</button>
+      <button class="btn btn-outline" style="flex:1" onclick="setPrimary('${n.name}')">Set Primary</button>
+    </div>`:''}`;
+  ($('dpanel-bg')||{classList:{add:()=>{},remove:()=>{},toggle:()=>{}}}).classList.add('show');
+  setTimeout(()=>($('dpanel')||{classList:{add:()=>{},remove:()=>{},toggle:()=>{}}}).classList.add('show'),10);
+}
+function closeDetail(){ ($('dpanel')||{classList:{add:()=>{},remove:()=>{},toggle:()=>{}}}).classList.remove('show'); setTimeout(()=>($('dpanel-bg')||{classList:{add:()=>{},remove:()=>{},toggle:()=>{}}}).classList.remove('show'),350); }
+
+// ── Register ─────────────────────────────────────────────
+function openRegister(prefill=''){
+  if(!S.connected){toast('Connect wallet first','err');return;}
+  if(prefill) $('reg-name').value=prefill;
+  ($('m-reg')||{classList:{add:()=>{},remove:()=>{},toggle:()=>{}}}).classList.add('show');
+}
+function closeModal(id){ $(id).classList.remove('show'); }
+
+async function registerName(){
+  const name   = $('reg-name').value.trim().toLowerCase().replace('.gen','');
+  const addr   = $('reg-addr').value.trim();
+  const url    = $('reg-url').value.trim();
+  const avatar = $('reg-avatar').value.trim()||'🧑‍💻';
+  const bio    = $('reg-bio').value.trim();
+  if(!name){ toast('Enter a name','err'); return; }
+  const btn = $('btn-reg-sub');
+  btn.disabled=true; btn.textContent='⟳ Validating…';
+  toast('AI is validating your name - this can take 1-3 min…','ok',15000);
+  try{
+    const hash = await writeContract('register',[name,addr,url,avatar,bio]);
+    await waitTx(hash,40);
+    toast(`${name}.gen registered ✓`,'ok');
+    closeModal('m-reg');
+    ['reg-name','reg-addr','reg-url','reg-avatar','reg-bio'].forEach(id=>$(id).value='');
+    await load();
+  }catch(e){ toast(e.message,'err'); }
+  finally{ btn.disabled=false; btn.textContent='Register - AI will validate'; }
+}
+
+// ── Update ────────────────────────────────────────────────
+function openUpdate(name){
+  const n = NAMES.find(x=>x.name===name); if(!n) return;
+  document.querySelectorAll('.update-name').forEach(el=>el.textContent=name+'.gen');
+  $('update-name-val').value = name;
+  $('upd-url').value    = n.url||'';
+  $('upd-avatar').value = n.avatar||'';
+  $('upd-bio').value    = n.bio||'';
+  closeDetail();
+  setTimeout(()=>($('m-update')||{classList:{add:()=>{},remove:()=>{},toggle:()=>{}}}).classList.add('show'),400);
+}
+
+async function updateRecord(){
+  const name   = $('update-name-val').value;
+  const url    = $('upd-url').value.trim();
+  const avatar = $('upd-avatar').value.trim();
+  const bio    = $('upd-bio').value.trim();
+  const btn    = $('btn-upd-sub');
+  btn.disabled=true; btn.textContent='⟳ Saving…';
+  try{
+    const hash = await writeContract('update_record',[name,url,avatar,bio]);
+    await waitTx(hash,30);
+    toast('Profile updated ✓','ok');
+    closeModal('m-update');
+    await load();
+  }catch(e){ toast(e.message,'err'); }
+  finally{ btn.disabled=false; btn.textContent='Save Changes'; }
+}
+
+async function releaseConfirm(){
+  const name = $('update-name-val').value;
+  if(!confirm(`Release ${name}.gen? This cannot be undone.`)) return;
+  try{
+    const hash = await writeContract('release',[name]);
+    await waitTx(hash,30);
+    toast(`${name}.gen released`,'ok');
+    closeModal('m-update');
+    await load();
+  }catch(e){ toast(e.message,'err'); }
+}
+
+async function setPrimary(name){
+  try{
+    const hash = await writeContract('set_primary',[name]);
+    await waitTx(hash,20);
+    toast(`${name}.gen set as primary ✓`,'ok');
+  }catch(e){ toast(e.message,'err'); }
+}
+
+// ── Wallet ────────────────────────────────────────────────
+async function connectWallet(){
+  if(!window.ethereum){toast('Install MetaMask','err');return;}
+  try{
+    const accs  = await window.ethereum.request({method:'eth_requestAccounts'});
+    const chain = await window.ethereum.request({method:'eth_chainId'});
+    if(chain!==CHAIN_ID){
+      try{ await window.ethereum.request({method:'wallet_switchEthereumChain',params:[{chainId:CHAIN_ID}]}); }
+      catch(e){ if(e.code===4902||e.code===-32603) await window.ethereum.request({method:'wallet_addEthereumChain',params:[NET]}); }
+    }
+    S.account=accs[0]; S.connected=true;
+    ($('wpill')||{classList:{add:()=>{},remove:()=>{},toggle:()=>{}}}).classList.add('show');
+    $('wpill-addr').textContent=sh(S.account);
+    ($('hdr-conn')||{style:{}}).style.display='none';
+    ($('hdr-dis')||{style:{}}).style.display='block';
+    ($('btn-reg')||{style:{}}).style.display='block';
+    toast('Connected ✓','ok');
+    window.ethereum.on('accountsChanged',a=>{if(!a.length)disconnectWallet();});
+    window.ethereum.on('chainChanged',()=>location.reload());
+    // Check if they own any names
+    if(CONTRACT_ADDR){
+      const myName = await readContract(CONTRACT_ADDR,'get_name_by_address',[S.account]);
+      if(myName) toast(`Your primary name: ${myName}.gen`,'ok');
+    }
+  }catch(e){ toast(e.message||'Connection failed','err'); }
+}
+function disconnectWallet(){
+  S.account=''; S.connected=false;
+  ($('wpill')||{classList:{add:()=>{},remove:()=>{},toggle:()=>{}}}).classList.remove('show');
+  ($('hdr-conn')||{style:{}}).style.display='block';
+  ($('hdr-dis')||{style:{}}).style.display='none';
+  ($('btn-reg')||{style:{}}).style.display='none';
+}
+
+function toggleTheme() {
+  const dark=document.documentElement.getAttribute('data-theme')==='dark';
+  document.documentElement.setAttribute('data-theme',dark?'light':'dark');
+  $('tbtn').textContent=dark?'☀':'☾';
+  localStorage.setItem('gmt',dark?'light':'dark');
+}
+
+function toast(msg, type='ok', duration=4000) {
+  const el=$('toast'); el.textContent=msg;
+  el.className=`show t${type}`;
+  clearTimeout(el._t); el._t=setTimeout(()=>el.className='',duration);
+}
+
+// ════════════════════════════════════════════════════════
+//  PARTICLE CANVAS - floating network background
+// ════════════════════════════════════════════════════════
+(function initParticles(){
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const canvas = $('particle-canvas');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let W, H, particles;
+  const N = 55, LINK_DIST = 140, SPEED = 0.3;
+
+  function resize(){
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  function mkParticle(){
+    return { x:Math.random()*W, y:Math.random()*H,
+             vx:(Math.random()-.5)*SPEED, vy:(Math.random()-.5)*SPEED,
+             r: Math.random()*1.5+1 };
+  }
+  particles = Array.from({length:N}, mkParticle);
+
+  function getColor(alpha){
+    const dark = document.documentElement.getAttribute('data-theme')==='dark';
+    return dark ? `rgba(110,100,255,${alpha})` : `rgba(17,15,255,${alpha})`;
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    // Move
+    particles.forEach(p=>{
+      p.x += p.vx; p.y += p.vy;
+      if(p.x < 0||p.x > W) p.vx *= -1;
+      if(p.y < 0||p.y > H) p.vy *= -1;
+    });
+    // Lines
+    for(let i=0;i<N;i++){
+      for(let j=i+1;j<N;j++){
+        const dx=particles[i].x-particles[j].x, dy=particles[i].y-particles[j].y;
+        const dist=Math.sqrt(dx*dx+dy*dy);
+        if(dist<LINK_DIST){
+          ctx.strokeStyle=getColor((1-dist/LINK_DIST)*0.15);
+          ctx.lineWidth=1;
+          ctx.beginPath(); ctx.moveTo(particles[i].x,particles[i].y);
+          ctx.lineTo(particles[j].x,particles[j].y); ctx.stroke();
+        }
+      }
+    }
+    // Dots
+    particles.forEach(p=>{
+      ctx.fillStyle=getColor(0.35);
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ── Auto-reconnect ────────────────────────────────────────
+if(window.ethereum){
+  window.ethereum.request({method:'eth_accounts'}).then(a=>{
+    if(a&&a[0]){
+      S.account=a[0]; S.connected=true;
+      ($('wpill')||{classList:{add:()=>{},remove:()=>{},toggle:()=>{}}}).classList.add('show');
+      $('wpill-addr').textContent=sh(a[0]);
+      ($('hdr-conn')||{style:{}}).style.display='none';
+      ($('hdr-dis')||{style:{}}).style.display='block';
+      ($('btn-reg')||{style:{}}).style.display='block';
+    }
+  }).catch(()=>{});
+}
+
+load();
+
+</script>
+</body>
+</html>
