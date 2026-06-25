@@ -21,6 +21,8 @@ class DotGen(gl.Contract):
 
     def __init__(self):
         self.owner = str(gl.message.sender_address).lower().strip()
+        root = gl.storage.Root.get()
+        root.upgraders.get().append(gl.message.sender_address)
 
     # ── Helpers ──────────────────────────────────────────────
     def _addr(self) -> str: return str(gl.message.sender_address).lower().strip()
@@ -44,7 +46,6 @@ class DotGen(gl.Contract):
             pass
 
     # ── Views ─────────────────────────────────────────────────
-
     @gl.public.view
     def get_record(self, name: str) -> str:
         key = self._clean_name(name)
@@ -97,6 +98,14 @@ class DotGen(gl.Contract):
         return str(len(self.names))
 
     # ── Writes ────────────────────────────────────────────────
+
+    @gl.public.write
+    def upgrade(self, new_code: bytes) -> None:
+        """Push a new version without changing the contract address. Deployer only."""
+        root = gl.storage.Root.get()
+        code = root.code.get()
+        code.truncate()
+        code.extend(new_code)
 
     @gl.public.write
     def register(self, name: str, address: str,
