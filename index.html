@@ -380,6 +380,17 @@ footer a:hover{color:var(--green)}
 </footer>
 
 <script>
+const S            = { account:'', connected:false };
+let   NAMES        = [];
+const CHAIN_ID     = '0x107D';
+const CONTRACT_ADDR= '0x83cEb711e54aF1ee8E2C6868c1f8fc98bD6e6642';
+const $            = id => document.getElementById(id);
+const sh           = a => a?.length>10 ? a.slice(0,6)+'...'+a.slice(-4) : (a||'');
+const NET = { chainId:'0x107D', chainName:'GenLayer Bradbury',
+  rpcUrls:['https://rpc-bradbury.genlayer.com'],
+  nativeCurrency:{name:'GEN',symbol:'GEN',decimals:18},
+  blockExplorerUrls:['https://explorer-bradbury.genlayer.com'] };
+
 const _T = { SPECIAL:0, PINT:1, NINT:2, BYTES:3, STR:4, ARR:5, MAP:6 };
 const _S = { NULL:0, FALSE:8, TRUE:16, ADDR:24 }; // (val << 3) | SPECIAL
 
@@ -551,19 +562,6 @@ async function readContract(addr, method, args=[]) {
 
 async function writeContract(method,args=[]){
   const cd = encodeCalldataMsgpack(method,args,false);
-  const CONTRACT_ADDR = '0x83cEb711e54aF1ee8E2C6868c1f8fc98bD6e6642';
-const S = { account:'', connected:false };
-let NAMES = [];
-const CHAIN_ID = '0x107D';
-const NET = {
-  chainId: '0x107D',
-  chainName: 'GenLayer Bradbury',
-  rpcUrls: ['https://rpc-bradbury.genlayer.com'],
-  nativeCurrency: { name:'GEN', symbol:'GEN', decimals:18 },
-  blockExplorerUrls: ['https://explorer-bradbury.genlayer.com']
-};
-const $ = id => document.getElementById(id);
-const sh = a => a?.length > 10 ? a.slice(0,6)+'...'+a.slice(-4) : (a||'');
 const CONS='0x0112Bf6e83497965A5fdD6Dad1E447a6E004271D';
   const pad=v=>v.toString(16).padStart(64,'0');
   const padA=a=>a.toLowerCase().replace('0x','').padStart(64,'0');
