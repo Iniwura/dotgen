@@ -386,7 +386,7 @@ const CHAIN_ID     = '0x107D';
 const CONTRACT_ADDR= '0x83cEb711e54aF1ee8E2C6868c1f8fc98bD6e6642';
 const $            = id => document.getElementById(id);
 const sh           = a => a?.length>10 ? a.slice(0,6)+'...'+a.slice(-4) : (a||'');
-const RPC          = 'https://rpc-bradbury.genlayer.com';
+const RPC          = '/api/rpc'; // proxied — avoids CORS/ad-blocker
 const NET = { chainId:'0x107D', chainName:'GenLayer Bradbury',
   rpcUrls:['https://rpc-bradbury.genlayer.com'],
   nativeCurrency:{name:'GEN',symbol:'GEN',decimals:18},
@@ -502,23 +502,12 @@ function encodeCalldataMsgpack(method, args, leaderOnly=false) {
 }
 
 async function rpcPost(method, params) {
-  // Route through wallet to avoid CORS — wallet is already connected to Bradbury RPC
-  if (window.ethereum) {
-    try {
-      const result = await window.ethereum.request({ method, params });
-      return result;
-    } catch(e) {
-      const msg = (e.message||'').toLowerCase();
-      // Only fall through if wallet doesn't support the method
-      if (!msg.includes('unsupported') && !msg.includes('not support') && !msg.includes('unknown method')) throw e;
-    }
-  }
-  // Fallback: direct fetch
   const r = await fetch(RPC, {
     method:'POST', mode:'cors', credentials:'omit',
     headers:{'Content-Type':'application/json'},
     body: JSON.stringify({jsonrpc:'2.0', id:Date.now(), method, params})
   });
+  if (!r.ok) throw new Error('HTTP ' + r.status);
   const d = await r.json();
   if (d.error) throw new Error(d.error.message || JSON.stringify(d.error));
   return d.result;
